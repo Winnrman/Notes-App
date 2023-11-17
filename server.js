@@ -38,6 +38,7 @@ app.post('/register', async (req, res) => {
     try {
         // Extract user details from request body
         const { username, email, password, firstName, lastName} = req.body;
+        console.log(req.body);
 
         // Check if the user already exists
         let user = await User.findOne({ email });
@@ -170,13 +171,60 @@ app.post('/api/freeNotes', async (req, res) => {
     }
 });
 
+
+app.get('/api/freeNotes/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const note = await NoteModel.findById(id);
+
+        if (!note) {
+            return res.status(404).send('Note not found');
+        }
+
+        res.status(200).json(note);
+    } catch (error) {
+        res.status(500).send('Server error');
+    }
+});
+
+app.put('/api/freeNotes/:id', async (req, res) => {
+    const { id } = req.params;
+    const updatedData = req.body; // This should contain the new note data
+
+    try {
+        // Code to find the note by id and update it with updatedData
+        // For example, using a database operation
+        const updatedNote = await NoteModel.findByIdAndUpdate(id, updatedData, { new: true });
+
+        if (!updatedNote) {
+            return res.status(404).send('Note not found');
+        }
+
+        res.status(200).json(updatedNote);
+    } catch (error) {
+        res.status(500).send('Server error');
+    }
+});
+
+
 app.get('/api/user/notes', async (req, res) => {
     try {
         // Extract user ID from the token
         const decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
         const userId = decoded.user.id;
 
-        // Find the user
+        // check if token is valid
+        if (!userId) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        //check if token is expired
+        // if(decoded.exp < Date.now()){
+        //     return res.status(404).json({ msg: 'Token expired' });
+        // }
+
+        // // Find the user
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
@@ -196,9 +244,6 @@ app.get('/api/user/notes', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
-
-
-
 
 
 // Choose a port

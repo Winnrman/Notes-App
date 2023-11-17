@@ -25,7 +25,7 @@ function Register() {
                     'Content-Type': 'application/json'
                 }
             };
-            const body = JSON.stringify({ username, email, password });
+            const body = JSON.stringify({ username, email, password, firstName, lastName});
             const response = await axios.post('/register', body, config);
             console.log(response.data);
             //if the response is successful, redirect to login page

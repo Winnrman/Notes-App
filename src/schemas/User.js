@@ -50,6 +50,7 @@ const userSchema = new Schema({
         type: Boolean,
         default: true
     },
+    starredNotes: [String], // Array of note IDs
     subscriptionEndDate: Date
 });
 
