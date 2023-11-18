@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 // FreeNote Schema
-const freeNoteSchema = new Schema({
+const noteSchema = new Schema({
     title: {
         type: String,
         required: true,
@@ -24,9 +24,9 @@ const freeNoteSchema = new Schema({
 });
 
 // Create a model
-const FreeNote = mongoose.model('FreeNote', freeNoteSchema);
+const Note = mongoose.model('Note', noteSchema);
 
 // Export the model
-module.exports = FreeNote;
+module.exports = Note;
 
 

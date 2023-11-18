@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import RichTextEditor from '../components/RichTextEditor';
+
 
 function NewNote() {
     const [noteData, setNoteData] = useState({
@@ -12,7 +14,11 @@ function NewNote() {
 
     const onChange = e => {
         setNoteData({ ...noteData, [e.target.name]: e.target.value });
-    }
+    };
+
+    const handleContentChange = content => {
+        setNoteData({ ...noteData, content });
+    };
 
     const onSubmit = async e => {
         e.preventDefault();
@@ -25,7 +31,7 @@ function NewNote() {
                 }
             };
             const body = JSON.stringify(noteData);
-            const response = await axios.post('/api/freeNotes', body, config);
+            const response = await axios.post('/api/notes', body, config);
             // Handle successful creation (e.g., redirecting to dashboard or a specific note page)
             // console.log(response.data);
             window.location = "/dashboard";
@@ -51,12 +57,8 @@ function NewNote() {
                 </div>
                 <div className = "flex flex-col gap-2"> 
                     <label>Content</label>
-                    <textarea className = "ring-2 ring-blue-500 rounded-md p-2 w-96 text-sm"
-                        name="content"
-                        value={content}
-                        onChange={onChange}
-                        required
-                    />
+                    <RichTextEditor value={content} onChange={handleContentChange} />
+
                 </div>
                 <button className = "bg-blue-500 w-96 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="submit">Create</button>
             </form>

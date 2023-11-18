@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getNote, updateNote } from './notesService'; // Assuming you've created a notesService file
+import RichTextEditor from '../components/RichTextEditor';
 
 const EditNote = () => {
     const [noteData, setNoteData] = useState({ title: '', content: '' });
@@ -34,7 +35,9 @@ const EditNote = () => {
         e.preventDefault();
         try {
             let response = await updateNote(noteId, noteData); // Assuming this function is defined in notesService
-            setSuccessMessage('Note updated successfully.');
+            console.log(response)
+            //go back to dashboard
+            window.location = "/dashboard";
         } catch (error) {
             setErrorMessage('Error updating note.');
             console.error(error);
@@ -44,6 +47,11 @@ const EditNote = () => {
     if (isLoading) {
         return <p>Loading...</p>;
     }
+
+    const handleContentChange = content => {
+        setNoteData({ ...noteData, content });
+    };
+    
 
     return (
         <div>
@@ -65,13 +73,7 @@ const EditNote = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                     <label>Content</label>
-                    <textarea
-                        className="ring-2 ring-blue-500 rounded-md p-2 w-96 text-sm"
-                        name="content"
-                        value={noteData.content}
-                        onChange={onChange}
-                        required
-                    />
+                    <RichTextEditor value={noteData.content} onChange={handleContentChange} />
                 </div>
                 <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="submit">
                     Update

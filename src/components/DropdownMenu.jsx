@@ -12,6 +12,11 @@ const DropdownMenu = ({ userData }) => {
     }
   };
 
+  const logout = () => {
+    localStorage.removeItem('token');
+    window.location = "/login";
+};
+
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -40,13 +45,19 @@ const DropdownMenu = ({ userData }) => {
             <>
           <p className="justify-between flex block px-4 py-2 text-sm text-purple-900 font-bold hover:bg-gray-100 hover:rounded-md">{userData.accountType}<span className = "font-light">Change</span></p>
           <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-md">Account Settings</a>
+          <p onClick={logout} className="hover:cursor-pointer justify-between flex block px-4 py-2 text-sm text-purple-900 font-bold hover:bg-gray-100 hover:rounded-md">Sign Out</p>
+
           </>
             ) : (
             <p className="justify-between flex block px-4 py-2 text-sm text-purple-900 font-bold hover:bg-gray-100 hover:rounded-md">Sign In</p>
             )}
           {/* ... other links ... */}
+
         </div>
+            
       )}
+
+
     </div>
   );
 };

@@ -7,8 +7,9 @@ const User = require('./src/schemas/User'); // Adjust path as needed
 const MongoDB = require('mongodb');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const FreeNote = require('./src/schemas/FreeNote'); // Adjust path as needed
+const Note = require('./src/schemas/Note'); // Adjust path as needed
 const ObjectId = require('mongodb').ObjectId;
+
 
 
 // ...rest of your server setup (like MongoDB connection)
@@ -112,8 +113,22 @@ app.post('/login', async (req, res) => {
 
 app.get('/api/user/data', async (req, res) => {
     try {
+
+        const tokenHeader = req.header('Authorization');
+        // console.log(tokenHeader); // Check what you're receiving
+
+        if (!tokenHeader) {
+            return res.status(401).send('No token provided.');
+        }
+
         const token = req.header('Authorization').replace('Bearer ', '');
+
+        if (!token || token === '') {
+            return res.status(401).send('Token is malformed.');
+        }
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
         const user = await User.findById(decoded.user.id);
 
         if (!user) {
@@ -128,7 +143,7 @@ app.get('/api/user/data', async (req, res) => {
     }
 });
 
-app.post('/api/freeNotes', async (req, res) => {
+app.post('/api/notes', async (req, res) => {
     try {
         // Extract note details from request body
         const { title, content } = req.body;
@@ -147,7 +162,7 @@ app.post('/api/freeNotes', async (req, res) => {
         const userId = user.userId;
 
         // Create a new note
-        const note = new FreeNote({
+        const note = new Note({
             title,
             content,
             userId
@@ -161,7 +176,7 @@ app.post('/api/freeNotes', async (req, res) => {
 
         // Save the user
         await user.save();
-        console.log(user.notes);
+        // console.log(user.notes);
 
         // Send a response
         res.status(201).json({ msg: 'Note saved successfully' });
@@ -172,11 +187,15 @@ app.post('/api/freeNotes', async (req, res) => {
 });
 
 
-app.get('/api/freeNotes/:id', async (req, res) => {
+app.get('/api/notes/:id', async (req, res) => {
     const { id } = req.params;
 
+    // console.log("id: " + id)
+
     try {
-        const note = await NoteModel.findById(id);
+        const note = await db.collection("notes").findOne({ _id: new ObjectId(id) });
+
+        // console.log(note);
 
         if (!note) {
             return res.status(404).send('Note not found');
@@ -188,14 +207,17 @@ app.get('/api/freeNotes/:id', async (req, res) => {
     }
 });
 
-app.put('/api/freeNotes/:id', async (req, res) => {
+app.put('/api/notes/:id', async (req, res) => {
     const { id } = req.params;
     const updatedData = req.body; // This should contain the new note data
 
     try {
-        // Code to find the note by id and update it with updatedData
-        // For example, using a database operation
-        const updatedNote = await NoteModel.findByIdAndUpdate(id, updatedData, { new: true });
+     const updatedNote = await Note.findByIdAndUpdate(
+    id,
+    updatedData,
+    { new: true } // This option is used in Mongoose to return the modified document rather than the original
+);
+
 
         if (!updatedNote) {
             return res.status(404).send('Note not found');
@@ -203,9 +225,11 @@ app.put('/api/freeNotes/:id', async (req, res) => {
 
         res.status(200).json(updatedNote);
     } catch (error) {
+        console.error(error); // Always log the error
         res.status(500).send('Server error');
     }
 });
+
 
 
 app.get('/api/user/notes', async (req, res) => {
@@ -245,6 +269,17 @@ app.get('/api/user/notes', async (req, res) => {
     }
 });
 
+app.delete('/api/notes/:id', async (req, res) => {
+    let { id } = req.params;
+    try {
+        await Note.findByIdAndDelete(id);
+        res.status(200).json({ msg: 'Note deleted successfully' });
+    }
+    catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
 
 // Choose a port
 const port = process.env.PORT || 4000;

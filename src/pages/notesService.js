@@ -8,7 +8,7 @@ const config = {
 
 export const getNote = async (noteId) => {
     try {
-        const response = await axios.get(`/api/freeNotes/${noteId}`, config);
+        const response = await axios.get(`/api/notes/${noteId}`, config);
         return response.data;
     } catch (error) {
         console.error("Error fetching note:", error);
@@ -23,7 +23,7 @@ export const updateNote = async (noteId, noteData) => {
     };
 
     try {
-        const response = await axios.put(`/api/freeNotes/${noteId}`, noteData, config);
+        const response = await axios.put(`/api/notes/${noteId}`, noteData, config);
         return response.data;
     } catch (error) {
         console.error("Error updating note:", error);
