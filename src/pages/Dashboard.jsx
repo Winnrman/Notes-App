@@ -178,6 +178,43 @@ New</button>
             )
             } */}
 
+            {/* <button onClick = {(e) => setCreatingFolder(true)} className = "flex items-center gap-2 bg-slate-100/10 p-2 w-fit rounded-md m-6">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 fill-white/60">
+            <path fillRule="evenodd" d="M19.5 21a3 3 0 003-3V9a3 3 0 00-3-3h-5.379a.75.75 0 01-.53-.22L11.47 3.66A2.25 2.25 0 009.879 3H4.5a3 3 0 00-3 3v12a3 3 0 003 3h15zm-6.75-10.5a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25v2.25a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25V10.5z" clipRule="evenodd" />
+            </svg>
+            <h1 className = "text-white/60 text-sm">Create folder</h1>
+            </button>
+
+            <div className = "flex flex-row items-center mx-6 gap-4">
+            <div className = "flex items-center gap-2 bg-slate-100/30 p-2 w-fit rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 fill-white/60">
+                <path d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 10.146V6a3 3 0 013-3h5.379a2.25 2.25 0 011.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 013 3v1.146A4.483 4.483 0 0019.5 9h-15a4.483 4.483 0 00-3 1.146z" />
+                </svg>
+                <div className = "flex flex-col gap-1">
+                <h1 className = "text-white/60 text-sm font-semibold">Folder 1</h1>
+                <p className = "text-white/60 text-xs">2 Notes</p>
+                </div>
+            </div>
+            <div className = "flex items-center gap-2 bg-slate-100/30 p-2 w-fit rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 fill-white/60">
+                <path d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 10.146V6a3 3 0 013-3h5.379a2.25 2.25 0 011.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 013 3v1.146A4.483 4.483 0 0019.5 9h-15a4.483 4.483 0 00-3 1.146z" />
+                </svg>
+                <div className = "flex flex-col gap-1">
+                <h1 className = "text-white/60 text-sm font-semibold">Folder 2</h1>
+                <p className = "text-white/60 text-xs">3 Notes</p>
+                </div>
+            </div>
+            <div className = "flex items-center gap-2 bg-slate-100/30 p-2 w-fit rounded-md  ">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 fill-white/60">
+                <path d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 10.146V6a3 3 0 013-3h5.379a2.25 2.25 0 011.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 013 3v1.146A4.483 4.483 0 0019.5 9h-15a4.483 4.483 0 00-3 1.146z" />
+                </svg>
+                <div className = "flex flex-col gap-1">
+                <h1 className = "text-white/60 text-sm font-semibold">Folder 3</h1>
+                <p className = "text-white/60 text-xs">7 Notes</p>
+                </div>
+            </div>
+            </div> */}
+
 
             {userData.notes.length > 0 ? (
                 <div className = "w-full bg-transparent p-2 rounded-md">
