@@ -13,7 +13,8 @@ const plans = [
         "Maximum of 50 notes",
         "Access by web only",
         "Basic search functionality",
-        "Community support via forums"
+        "Community support via forums",
+        "Ability to share notes wih others, but not collaborate"
       ],
       selected: true
     },
@@ -39,7 +40,7 @@ const plans = [
       features: [
         "Everything included in Free and Pro Tiers",
         "Advanced collaboration tools (real-time editing, version history, comments)",
-        "Integration with third-party tools (Slack, Trello, etc.)",
+        "Integration with third-party tools (Slack, Trello, Excel, etc.)",
         "Enhanced security features (end-to-end encryption, single sign-on)",
         "Admin panel for user management and access control",
         "Custom branding options",

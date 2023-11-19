@@ -60,7 +60,7 @@ const Dashboard = () => {
     return (
         <>
         <Header/>
-        <div className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen"> 
+        <div className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen sm:h-screen"> 
             {showNotification && (
                 <div className="fixed top-0 left-0 right-0 bg-green-500 text-white p-2 text-center">
                     {notificationMessage}
@@ -78,7 +78,7 @@ New</button>
             {userData.notes.length > 0 ? (
                 <div className = "w-full bg-transparent p-2 rounded-md">
                     {/* <h2 className = "text-xl font-semibold text-white">Your Notes</h2> */}
-                    <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                     {notes.map(note => (
                         <Note key={note.id} note={note} showDeleteNotification={showDeleteNotification} fetchNotes={fetchNotes} />
                     ))}
@@ -121,7 +121,7 @@ Recent Notes</h1>
                 //     ))} 
                 // </div>
 
-                <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-5 xl:grid-cols-5">
                 {notes.slice(0,5).map(note => (
                     <Note key={note.id} note={note} showDeleteNotification={showDeleteNotification} fetchNotes={fetchNotes} />
                 ))}

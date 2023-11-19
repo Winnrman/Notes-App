@@ -96,10 +96,17 @@ app.post('/login', async (req, res) => {
             }
         };
 
+        console.log(payload)
+
+        if (!process.env.JWT_SECRET) {
+            console.error("JWT_SECRET is not defined.");
+            return res.status(500).send("Internal server error.");
+        }
+        
         jwt.sign(
             payload,
             process.env.JWT_SECRET, // Replace with your JWT secret key
-            { expiresIn: '24h' }, // Token expiration time
+            { expiresIn: '12h' }, // Token expiration time
             (err, token) => {
                 if (err) throw err;
                 res.json({ token });
@@ -277,6 +284,47 @@ app.delete('/api/notes/:id', async (req, res) => {
     }
     catch (err) {
         console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/api/star/:id', async (req, res) => {
+    const { id } = req.params;
+
+    console.log(req.header.Authorization)
+
+    try {
+        const note = await db.collection("notes").findOne({ _id: new ObjectId(id) });
+
+        //add the note to the user's starred notes array
+        const token = req.header('Authorization').replace('Bearer ', '');
+        const decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+        const userId = decoded.user.id;
+        // Check if the user already exists
+        if(!decoded){
+            return res.status(400).json({ msg: 'User does not exist' });
+        }
+
+        // Find the user
+        const user = User.findOne({ userId });
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        //add the note to the user's starred notes array
+        user.starredNotes.push(note._id);
+
+        // Save the user
+        await user.save();
+
+        if (!note) {
+            return res.status(404).send('Note not found');
+        }
+
+        res.status(200).json(note);
+    } catch (error) {
+        console.log(error)
         res.status(500).send('Server error');
     }
 });

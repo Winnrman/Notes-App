@@ -11,7 +11,7 @@ function RichTextEditor({ value, onChange }) {
   };
 
   return (
-    <ReactQuill value={value} onChange={handleChange} />
+    <ReactQuill value={value} onChange={handleChange} className = "bg-slate-100 h-screen" />
   );
 }
 

@@ -1,6 +1,5 @@
 
 
-import starNote from '../pages/StarNote'; //this is temporary, it will be changed to a function that stars a note
 import axios from 'axios';
 
 const note = (props) => {
@@ -32,6 +31,17 @@ const note = (props) => {
 
     }
 
+    function starNote (id) {
+        let token = localStorage.getItem('token');
+        const config = {
+            'Authorization': `Bearer ${token}`
+        };
+        axios.get(`/api/star/${id}`, config)
+        .then(res => console.log(res.data));
+        showDeleteNotification("Note deleted successfully.");
+        fetchNotes(); //this is a function that fetches the notes again
+    }
+
     return (
             <div key={note._id} className="bg-white flex flex-col justify-between rounded-md p-2 text-sm hover:bg-white/90 hover:cursor-pointer hover:ring-2 hover:ring-slate-600 shadow-md m-4">
                 <span>
@@ -58,7 +68,7 @@ const note = (props) => {
                 <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
                 <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
                 </svg>
-</button>
+                </button>
             </div>
             </div>
         </div>
