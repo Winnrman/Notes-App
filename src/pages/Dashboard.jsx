@@ -5,13 +5,17 @@ import Header from '../components/Header';
 import {fetchNotes} from './notesService';
 import {fetchUserData} from '../components/userService';
 import Note from '../components/Note';
+import { get, set } from 'mongoose';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
     const [notes, setNotes] = useState([]);
 
+
     const [showNotification, setShowNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
+
+    const [creatingFolder, setCreatingFolder] = useState(false);
 
     const showDeleteNotification = (message) => {
         setNotificationMessage(message);
@@ -39,6 +43,39 @@ const Dashboard = () => {
         }
     };
 
+    const handleCreateFolder = async (e) => {
+        console.log("Creating folder")
+
+        const token = localStorage.getItem('token');
+        const config = {
+            headers: {
+            'Authorization': `Bearer ${token}`
+            }
+        };
+
+        const body = {title: e.target[0].value}; // e.target[0] is the input element
+
+        const response = await axios.post('/api/folders', body, config);
+        // console.log(response.data);
+        const newFolder = response.data;
+        const newUserData = { ...userData };
+        newUserData.folders.push(newFolder);
+        setUserData(newUserData);
+    }
+
+
+    // const getFolderDetails = async (folderId) => {
+    //     const token = localStorage.getItem('token');
+    //     const config = {
+    //         headers: {
+    //         'Authorization': `Bearer ${token}`
+    //         }
+    //     };
+
+    //     const response = await axios.get(`/api/folders/${folderId}`, config);
+    //     setFolderData(response.data);
+    //     console.log(response.data);
+    // }
 
     useEffect(() => {
         const loadData = async () => {
@@ -51,11 +88,34 @@ const Dashboard = () => {
         fetchNotes();
     }, []);
 
+    // const [folderData, setFolderData] = useState(null);
+
+    //fetch the folder data for each folder
+    // useEffect(() => {
+    //     if (userData) {
+    //         userData.folders.forEach(folder => {
+    //             console.log(folder._id)
+    //             const getFolderDetails = async () => {
+    //                 const token = localStorage.getItem('token');
+    //                 const config = {
+    //                     headers: {
+    //                         'Authorization': `Bearer ${token}`
+    //                     }
+    //                 };
+    //                 const response = await axios.get(`/api/folders/${folder}`, config);
+    //                 console.log(response.data); //the folder data
+
+    //                 setFolderData(response.data);
+    //             }
+    //             getFolderDetails();
+    //         })
+    //     }
+    // }, [userData]);
+
+
     if (!userData) {
         return <div>Loading...</div>; // or any other loading state representation
     }
-
-    
 
     return (
         <>
@@ -74,6 +134,50 @@ const Dashboard = () => {
 </svg>
 New</button>
         </div>
+            {creatingFolder && (
+                //center div in the middle of the screen
+                <div className = "fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center">
+                    <div className = "bg-white rounded-md p-4 gap-2 flex flex-col">
+                        <div className = "flex justify-between items-center gap-2">
+                        <h1 className = "text-xl font-bold">Create new folder</h1>
+                        <button className = "w-8 h-8 hover:bg-slate-100 rounded-md items-center flex justify-center" onClick={() => setCreatingFolder(false)}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+  <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+</svg>
+</button>
+                        </div>
+                        <form className = "flex flex-col w-72 gap-2" onSubmit={e => handleCreateFolder(e)}>
+                            
+                            <input type="text" placeholder="Folder name" className = "border border-gray-300 bg-slate-900/10 p-2 rounded-md w-full" required/>
+                            <button type="submit" className = "bg-purple-900 w-full hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create</button>
+                        </form>
+                    </div>
+                </div>
+            )    
+            }
+
+
+            {/* THIS SECTION IS FOR FOLDERS, AND IS CURRENTLY UNDER DEVELOPMENT */}
+            {/* {userData.folders.length == 0 ? (
+                <div className = "w-auto bg-slate-100/10 p-2 rounded-md p-2 m-6">
+                    <button onClick = {(e) => setCreatingFolder(true)} className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create a folder</button>
+
+                </div>
+            ) : (   
+                <div className = "w-full bg-transparent p-2 rounded-md">
+                    <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                    {userData.folders.map(folder => (
+                        <div className = "bg-transparent ring-2 ring-slate-100/20 rounded-md p-2 hover:ring-2 hover:ring-slate-100/50 hover:cursor-pointer" onClick={() => window.location = `/folders/${folder._id}`}>
+                            <h1 className = "text-white font-semibold">{folderData && folderData.title}</h1>
+                            <p className = "text-white/60 text-sm">{folderData && folderData.notesCount} notes</p>
+                        </div>  
+                    ))}
+                    <button onClick = {(e) => setCreatingFolder(true)} className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create a folder</button>
+
+                    </div>
+                </div>
+            )
+            } */}
+
 
             {userData.notes.length > 0 ? (
                 <div className = "w-full bg-transparent p-2 rounded-md">

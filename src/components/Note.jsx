@@ -34,7 +34,9 @@ const note = (props) => {
     function starNote (id) {
         let token = localStorage.getItem('token');
         const config = {
+            headers: {
             'Authorization': `Bearer ${token}`
+            }
         };
         axios.get(`/api/star/${id}`, config)
         .then(res => console.log(res.data));

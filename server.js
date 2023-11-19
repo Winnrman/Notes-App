@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const Note = require('./src/schemas/Note'); // Adjust path as needed
 const ObjectId = require('mongodb').ObjectId;
+const Folder = require('./src/schemas/Folder'); // Adjust path as needed
 
 
 
@@ -308,7 +309,7 @@ app.get('/api/star/:id', async (req, res) => {
         // Find the user
         const user = User.findOne({ userId });
 
-        if (!user) {
+        if (!user) { //this user is not the same as the user above
             return res.status(404).json({ msg: 'User not found' });
         }
 
@@ -328,6 +329,65 @@ app.get('/api/star/:id', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+app.post('/api/folders', async (req, res) => {
+    try {
+        const token = req.header('Authorization').replace('Bearer ', '');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Find the user
+        let user = await db.collection('users').findOne({ _id: new ObjectId(decoded.user.id) });
+        if (!user) {
+            return res.status(400).json({ msg: 'User does not exist' });
+        }
+
+        // Extract folder details from request body
+        const { title } = req.body;
+
+        // Create a new folder
+        const folder = {
+            title,
+            userId: user._id // Assuming you want to store the user's ObjectId
+        };
+
+        // Save the folder and get the result to obtain the inserted ID
+        const result = await db.collection('folders').insertOne(folder);
+        
+        // Save the folder ID to the user's folders array
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(user._id) },
+            { $push: { folders: result.insertedId }}
+        );
+
+        // Send the folder id
+        res.status(201).json({ msg: 'Folder saved successfully', folderId: result.insertedId });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+app.get('/api/folders/:id', async (req, res) => {
+    try {
+        const folderId = req.params.id;
+
+        // Find the folder
+        const folder = await db.collection('folders').findOne({ _id: new ObjectId(folderId) });
+        if (!folder) {
+            return res.status(404).json({ msg: 'Folder not found' });
+        }
+
+        // Count the notes in the folder
+        const notesCount = await db.collection('notes').countDocuments({ folderId: new ObjectId(folderId) });
+
+        // Send the folder details and notes count
+        res.json({ ...folder, notesCount });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
 
 // Choose a port
 const port = process.env.PORT || 4000;

@@ -51,7 +51,8 @@ const userSchema = new Schema({
         default: true
     },
     starredNotes: [String], // Array of note IDs
-    subscriptionEndDate: Date
+    subscriptionEndDate: Date,
+    folders: [String], // Array of folder IDs
 });
 
 // Create a model

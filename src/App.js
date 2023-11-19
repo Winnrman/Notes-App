@@ -8,6 +8,7 @@ import NewNote from './pages/NewNote';
 import Welcome from './pages/Welcome';
 import EditNote from './pages/EditNote';
 import LoginProtectedRoute from './components/LoginProtectedRoute';
+import DemoPage from './pages/demoPage';
 
 function App() {
     return (
@@ -37,6 +38,10 @@ function App() {
                     <ProtectedRoute>
                         <EditNote />
                     </ProtectedRoute>
+                } />
+                <Route path = "/demopage" element={
+                    
+                        <DemoPage/>
                 } />
                 <Route path="/" element={<Welcome />} />
                 {/* Define other protected routes similarly */}
