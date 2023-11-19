@@ -10,6 +10,9 @@ import { get, set } from 'mongoose';
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
     const [notes, setNotes] = useState([]);
+    const [starredNotes, setStarredNotes] = useState([]);
+
+    const [currentTab, setCurrentTab] = useState('starredNotes'); // Can be 'starredNotes' or 'recentNotes'
 
 
     const [showNotification, setShowNotification] = useState(false);
@@ -80,6 +83,10 @@ const Dashboard = () => {
     useEffect(() => {
         const loadData = async () => {
             const data = await fetchUserData();
+            //check for expired token
+            if (data.message) {
+                window.location = '/login';
+            }
             setUserData(data);
             // console.log(data);
         };
@@ -88,29 +95,63 @@ const Dashboard = () => {
         fetchNotes();
     }, []);
 
-    // const [folderData, setFolderData] = useState(null);
+    const [folderData, setFolderData] = useState([]);
 
-    //fetch the folder data for each folder
-    // useEffect(() => {
-    //     if (userData) {
-    //         userData.folders.forEach(folder => {
-    //             console.log(folder._id)
-    //             const getFolderDetails = async () => {
-    //                 const token = localStorage.getItem('token');
-    //                 const config = {
-    //                     headers: {
-    //                         'Authorization': `Bearer ${token}`
-    //                     }
-    //                 };
-    //                 const response = await axios.get(`/api/folders/${folder}`, config);
-    //                 console.log(response.data); //the folder data
+    // fetch the folder data for each folder
+    useEffect(() => {
+        const fetchFoldersData = async () => {
+            if (userData) {
+                const token = localStorage.getItem('token');
+                const config = {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                };
+                const foldersData = await Promise.all(userData.folders.map(async (folder) => {
+                    const response = await axios.get(`/api/folders/${folder}`, config);
+                    return response.data;
+                }));
+                setFolderData(foldersData);
+            }
+        };
+    
+        fetchFoldersData();
+    }, [userData]);
 
-    //                 setFolderData(response.data);
-    //             }
-    //             getFolderDetails();
-    //         })
-    //     }
-    // }, [userData]);
+    const handleDeleteFolder = async (folderId) => {
+        const token = localStorage.getItem('token');
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        };
+
+        const response = await axios.delete(`/api/folders/${folderId}`, config);
+        // console.log(response.data);
+
+        const newUserData = { ...userData };
+        newUserData.folders = newUserData.folders.filter(folder => folder !== folderId);
+
+        setUserData(newUserData);
+        showDeleteNotification('Folder deleted successfully');
+    };
+
+    useEffect(() => {
+        const fetchStarredNotes = async () => {
+            try {
+                let userId = userData._id;
+                console.log(userId);
+                const response = await axios.get(`/api/users/${userId}/starredNotes`);
+                setStarredNotes(response.data);
+            } catch (error) {
+                console.error('Error fetching starred notes:', error);
+            }
+        };
+    
+        fetchStarredNotes();
+    }, [userData]); // Fetch starred notes when userData changes
+
+    
 
 
     if (!userData) {
@@ -120,7 +161,7 @@ const Dashboard = () => {
     return (
         <>
         <Header/>
-        <div className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen sm:h-screen"> 
+        <div className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen h-full py-6 sm:py-0"> 
             {showNotification && (
                 <div className="fixed top-0 left-0 right-0 bg-green-500 text-white p-2 text-center">
                     {notificationMessage}
@@ -157,26 +198,51 @@ New</button>
 
 
             {/* THIS SECTION IS FOR FOLDERS, AND IS CURRENTLY UNDER DEVELOPMENT */}
-            {/* {userData.folders.length == 0 ? (
+            {folderData.length === 0 ? (
                 <div className = "w-auto bg-slate-100/10 p-2 rounded-md p-2 m-6">
                     <button onClick = {(e) => setCreatingFolder(true)} className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create a folder</button>
-
                 </div>
             ) : (   
-                <div className = "w-full bg-transparent p-2 rounded-md">
-                    <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                    {userData.folders.map(folder => (
-                        <div className = "bg-transparent ring-2 ring-slate-100/20 rounded-md p-2 hover:ring-2 hover:ring-slate-100/50 hover:cursor-pointer" onClick={() => window.location = `/folders/${folder._id}`}>
-                            <h1 className = "text-white font-semibold">{folderData && folderData.title}</h1>
-                            <p className = "text-white/60 text-sm">{folderData && folderData.notesCount} notes</p>
-                        </div>  
-                    ))}
-                    <button onClick = {(e) => setCreatingFolder(true)} className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create a folder</button>
+                <div className = "w-auto bg-transparent p-2 m-4 rounded-md">
+                    <div className="bg-transparent py-2 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                    {folderData.map(folder => (
+                        <div key={folder._id} className="group bg-slate-100/10 ring-2 ring-slate-100/20 rounded-md p-2 hover:bg-slate-100/20 hover:ring-slate-100/50 relative">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 fill-slate-100/70">
+                                <path fillRule="evenodd" d="M19.5 21a3 3 0 003-3V9a3 3 0 00-3-3h-5.379a.75.75 0 01-.53-.22L11.47 3.66A2.25 2.25 0 009.879 3H4.5a3 3 0 00-3 3v12a3 3 0 003 3h15zM9 12.75a.75.75 0 000 1.5h6a.75.75 0 000-1.5H9z" clipRule="evenodd" />
+                                </svg>
 
+                                    <h1 className="text-slate-100/90 font-semibold">{folder.title}</h1>
+                                </div>
+                                <div className = "flex items-center gap-2">
+                                <button 
+                                className="top-2 bg-transparent hover:bg-slate-100/10 text-white rounded hidden group-hover:block"
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevents triggering the folder's onClick
+                                    handleDeleteFolder(folder._id);
+                                }}
+                            >
+                                {/* Trash Icon */}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 p-1">
+                                <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+                                </svg>
+
+                            </button>
+                                <p className="text-white/60 text-sm">{folder.notesCount} notes</p>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    ))}
+                    <button onClick = {(e) => setCreatingFolder(true)} className = "flex items-center gap-1 bg-slate-100/20 hover:bg-slate-100/30 w-fit text-white font-semibold py-2 px-4 rounded">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 fill-white/60">
+                        <path fillRule="evenodd" d="M19.5 21a3 3 0 003-3V9a3 3 0 00-3-3h-5.379a.75.75 0 01-.53-.22L11.47 3.66A2.25 2.25 0 009.879 3H4.5a3 3 0 00-3 3v12a3 3 0 003 3h15zm-6.75-10.5a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25v2.25a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25V10.5z" clipRule="evenodd" />
+                    </svg>New</button>
                     </div>
                 </div>
-            )
-            } */}
+            )}
+
 
             {/* <button onClick = {(e) => setCreatingFolder(true)} className = "flex items-center gap-2 bg-slate-100/10 p-2 w-fit rounded-md m-6">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 fill-white/60">
@@ -232,29 +298,33 @@ New</button>
                     <button className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => window.location = "/notes/new"}>Create a note</button>    
                 </div>
             )}
-        <div className = "w-auto bg-slate-100/30 p-2 h-32 mx-6 rounded-md">
-            <h1 className = "flex items-center gap-1 text-xl font-semibold text-white/80"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
-                </svg>Starred Notes</h1>
+        <div className = "w-auto bg-slate-100/30 p-2 h-fit mx-6 rounded-md">
+
+            <div className = "flex flex-row sm:w-1/4 bg-transparent rounded-md p-2">
+                <button onClick = {(e) => setCurrentTab('starredNotes')} className = {currentTab === 'starredNotes' ? "bg-slate-100/10 rounded-md p-2 w-1/2 hover:bg-slate-100/20" : "bg-transparent rounded-md p-2 w-1/2 hover:bg-slate-100/20"}>
+                    <h1 className = "text-white/70 font-semibold">Starred Notes</h1>
+                </button>
+                <button onClick = {(e) => setCurrentTab('recentNotes')} className = {currentTab === 'recentNotes' ? "bg-slate-100/10 rounded-md p-2 w-1/2 hover:bg-slate-100/20" : "bg-transparent rounded-md p-2 w-1/2 hover:bg-slate-100/20"}>
+                    <h1 className = "text-white/70 font-semibold">Recent Notes</h1>
+                </button>
+                </div>
+
+            {currentTab === 'starredNotes' ? (
+                <>
             {userData.starredNotes.length > 0 ? (
-                <ul>
-                    {userData.starredNotes.map(note => (
-                        <Note note = {note}></Note>
-                    ))}
-                </ul>
+                <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-5 xl:grid-cols-5">
+                {starredNotes.map(note => (
+                    <Note key={note.id} note={note} showDeleteNotification={showDeleteNotification} fetchNotes={fetchNotes} />
+                ))}
+                </div>
             ) : (
                 <div>
                     <h2 className = "text-xs text-center text-white/60 py-4">No starred notes.</h2>
                 </div>
             )}
-        </div>
-
-        <div className = "w-auto rounded-md bg-slate-100/10 m-6 py-2">
-            <h1 className = "flex items-center text-xl font-semibold text-white/70 px-4 gap-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-  <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
-</svg>
-Recent Notes</h1>
-            {/* show the 5 most recent notes */}
+            </>
+            ): (
+                <>
             {userData.notes.length > 0 ? (
                 // <div className = "rounded-md flex flex-col sm:flex-row">
                 //     {notes.slice(0,5).map(note => (
@@ -272,8 +342,9 @@ Recent Notes</h1>
                     <h2 className = "text-xs text-center">No recent notes.</h2>
                 </div>
             )}
+        </>
+            )}
         </div>
-
         </div>
         </>
     );

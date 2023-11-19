@@ -20,7 +20,11 @@ const noteSchema = new Schema({
     userId: {
         type: String,
         required: true
-    }
+    },
+    isStarred: {
+        type: Boolean,
+        default: false
+    },
 });
 
 // Create a model

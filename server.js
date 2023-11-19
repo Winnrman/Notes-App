@@ -129,10 +129,12 @@ app.get('/api/user/data', async (req, res) => {
             return res.status(401).send('No token provided.');
         }
 
+        // console.log(req.header)
+
         const token = req.header('Authorization').replace('Bearer ', '');
 
         if (!token || token === '') {
-            return res.status(401).send('Token is malformed.');
+            return res.status(401).send('No token provided.');
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -289,50 +291,9 @@ app.delete('/api/notes/:id', async (req, res) => {
     }
 });
 
-app.get('/api/star/:id', async (req, res) => {
-    const { id } = req.params;
-
-    console.log(req.header.Authorization)
-
-    try {
-        const note = await db.collection("notes").findOne({ _id: new ObjectId(id) });
-
-        //add the note to the user's starred notes array
-        const token = req.header('Authorization').replace('Bearer ', '');
-        const decoded = jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
-        const userId = decoded.user.id;
-        // Check if the user already exists
-        if(!decoded){
-            return res.status(400).json({ msg: 'User does not exist' });
-        }
-
-        // Find the user
-        const user = User.findOne({ userId });
-
-        if (!user) { //this user is not the same as the user above
-            return res.status(404).json({ msg: 'User not found' });
-        }
-
-        //add the note to the user's starred notes array
-        user.starredNotes.push(note._id);
-
-        // Save the user
-        await user.save();
-
-        if (!note) {
-            return res.status(404).send('Note not found');
-        }
-
-        res.status(200).json(note);
-    } catch (error) {
-        console.log(error)
-        res.status(500).send('Server error');
-    }
-});
-
 app.post('/api/folders', async (req, res) => {
     try {
-        const token = req.header('Authorization').replace('Bearer ', '');
+        const token = req.headers('Authorization').replace('Bearer ', '');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Find the user
@@ -371,6 +332,8 @@ app.get('/api/folders/:id', async (req, res) => {
     try {
         const folderId = req.params.id;
 
+        // console.log(folderId)
+
         // Find the folder
         const folder = await db.collection('folders').findOne({ _id: new ObjectId(folderId) });
         if (!folder) {
@@ -387,6 +350,89 @@ app.get('/api/folders/:id', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+app.delete('/api/folders/:id', async (req, res) => {
+    try {
+        const folderId = req.params.id;
+
+        // Delete the folder
+        await db.collection('folders').deleteOne({ _id: new ObjectId(folderId) });
+
+        // Delete the folder ID from the user's folders array
+        await db.collection('users').updateOne(
+            { folders: new ObjectId(folderId) },
+            { $pull: { folders: new ObjectId(folderId) }}
+        );
+
+        // Delete the folder ID from the notes in the folder
+        await db.collection('notes').updateMany(
+            { folderId: new ObjectId(folderId) },
+            { $unset: { folderId: '' }}
+        );
+
+        res.status(200).json({ msg: 'Folder deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/api/notes/:id/star', async (req, res) => {
+    try {
+
+        const { id } = req.params;
+        const note = await db.collection("notes").findOne({ _id: new ObjectId(id) });
+        if (!note) {
+            return res.status(404).send('Note not found');
+        }
+
+        console.log(req.headers)
+
+        const token = req.header('Authorization').replace('Bearer ', '');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.user.id;
+
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(userId) },
+            { $addToSet: { starredNotes: note._id } }
+        );
+
+        //also change the note's isStarred property to true
+        // await db.collection('notes').updateOne(
+        //     { _id: new ObjectId(id) },
+        //     { $set: { isStarred: true } }
+        // );
+
+        res.status(200).json({ msg: 'Note starred successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/api/users/:userId/starredNotes', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        const notes = await Promise.all(
+            user.starredNotes.map(async (noteId) => {
+                return await db.collection('notes').findOne({ _id: new ObjectId(noteId) });
+            })
+        );
+
+        // console.log(notes);
+        res.json(notes);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
 
 
 // Choose a port
