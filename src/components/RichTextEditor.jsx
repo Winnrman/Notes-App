@@ -1,17 +1,31 @@
 import React from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // include styles
+import imageHandler from './ImageHandler';
 
 function RichTextEditor({ value, onChange }) {
-  // No need to use useState if you're controlling the value from the parent component
-
-  const handleChange = value => {
-    // Here, you call the passed onChange prop, which should be the method defined in the parent component
-    onChange(value);
+  const modules = {
+    toolbar: {
+      container: [
+        // Include other toolbar options you want to show
+        [{ 'header': [1, 2, false] }],
+        ['bold', 'italic', 'underline'],
+        ['image'] // This is where you configure your image button
+      ],
+      handlers: {
+        // This will overwrite the default image handler of React Quill
+        'image': imageHandler
+      }
+    }
   };
 
   return (
-    <ReactQuill value={value} onChange={handleChange} className = "bg-slate-100 h-screen" />
+    <ReactQuill
+      value={value}
+      onChange={onChange}
+      modules={modules}
+      className="bg-slate-100 h-screen"
+    />
   );
 }
 
