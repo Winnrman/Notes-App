@@ -27,8 +27,8 @@ const note = (props) => {
         axios.delete(`/api/notes/${id}`, config)
         .then(res => console.log(res.data));
         showDeleteNotification("Note deleted successfully.");
-        fetchNotes(); //this is a function that fetches the notes again
-
+        //timeout for 1 second to allow notification to show
+        fetchNotes(); // Refresh notes to reflect changes
     }
 
     function starNote (id) {

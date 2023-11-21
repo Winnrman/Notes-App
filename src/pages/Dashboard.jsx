@@ -148,8 +148,8 @@ const Dashboard = () => {
             }
         }
         else{
-            // window.location = "/notes/new";
-            console.log("Creating new note")
+            window.location = "/notes/new";
+            
         }
     }
 
