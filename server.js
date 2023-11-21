@@ -281,21 +281,29 @@ app.get('/api/user/notes', async (req, res) => {
 
 app.delete('/api/notes/:id', async (req, res) => {
     let { id } = req.params;
+    var imageUrls = [];
     try {
 
         //if the note has an image, delete it from the uploads collection
         const note = await db.collection("notes").findOne({ _id: new ObjectId(id) });
-        if(note.content.includes("src=")){
-            imageUrl = note.content.split("src=")[1].split(" ")[0].replace('"', '').replace('"', ''); //this is the url of the image
-            //get rid of the /api/image/ part of the url
-            imageUrl = imageUrl.split("/api/image/")[1];
-            // get rid of the </p> part of the url
-            imageUrl = imageUrl.split("</p>")[0];
-            //get rid of the extra > at the end of the url
-            imageUrl = imageUrl.split(">")[0];
-            // console.log(imageUrl);
-            await db.collection('uploads.files').deleteOne({ filename: imageUrl });
-            await db.collection('uploads.chunks').deleteOne({ files_id: imageUrl });
+        if (note.content.includes("src=")) {
+            const srcOccurrences = note.content.split("src=");
+            for (let i = 1; i < srcOccurrences.length; i++) {
+                const imageUrl = srcOccurrences[i].split(" ")[0].replace(/"/g, "");
+                console.log(imageUrl)
+                if (imageUrl.includes("/api/image/")) {
+                    const imageId = imageUrl.split("/api/image/")[1].split("</p>")[0].split(">")[0];
+                    console.log(imageId)
+                    imageUrls.push(imageId);
+                }
+            }
+        }
+
+        // console.log(imageUrls);
+
+        for (const imageUrl of imageUrls) {
+            await db.collection("uploads.files").deleteOne({ filename: imageUrl });
+            await db.collection("uploads.chunks").deleteOne({ files_id: imageUrl });
         }
 
         await Note.findByIdAndDelete(id); //this deletes the note from the notes collection
