@@ -49,11 +49,22 @@ const note = (props) => {
                 // Handle error appropriately here
             });
     }
+
+    function handleRightClick (e, id) {
+        console.log("Right click");
+        e.preventDefault();
+        props.setNoteId(id);
+        props.setShowRightClickMenu(true);
+        props.setRightClickMenuX(e.pageX);
+        props.setRightClickMenuY(e.pageY);
+    }
     
 
 
     return (
-            <div key={note._id} className="bg-white flex flex-col justify-between rounded-md p-2 text-sm hover:bg-white/90 hover:cursor-pointer hover:ring-2 hover:ring-slate-600 shadow-md m-4">
+
+            //add right click menu for edit and delete
+            <div onContextMenu={(e) => handleRightClick (e, props.note._id)} className = "bg-white shadow-lg rounded-lg p-2 m-2">
                 <span>
             <h3 className = "font-semibold text-xl">{props.note.title}</h3>
             <div className = "post_content">

@@ -11,6 +11,10 @@ const Dashboard = () => {
     const [userData, setUserData] = useState(null);
     const [notes, setNotes] = useState([]);
     const [starredNotes, setStarredNotes] = useState([]);
+    const [showRightClickMenu, setShowRightClickMenu] = useState(false);
+
+    const [rightClickMenuX, setRightClickMenuX] = useState(0);
+    const [rightClickMenuY, setRightClickMenuY] = useState(0);
     const [viewingUpgradeNotification, setViewingUpgradeNotification] = useState(false); // Whether the user is viewing the upgrade notification
 
     const [currentTab, setCurrentTab] = useState('starredNotes'); // Can be 'starredNotes' or 'recentNotes'
@@ -20,6 +24,8 @@ const Dashboard = () => {
     const [notificationMessage, setNotificationMessage] = useState('');
 
     const [creatingFolder, setCreatingFolder] = useState(false);
+
+    const [noteId, setNoteId] = useState(''); // The ID of the note that was right-clicked on
 
     const showDeleteNotification = (message) => {
         setNotificationMessage(message);
@@ -236,8 +242,48 @@ const Dashboard = () => {
             </div>
         )}
 
+        {showRightClickMenu && (
+            <div
+                //set the location to the rightClickMenuX and rightClickMenuY
+                style = {{left: rightClickMenuX, top: rightClickMenuY}}
+                className="w-fit h-fit absolute flex flex-col justify-center shadow-lg ring-1 ring-slate-200 rounded-sm"
+                onClick={() => setShowRightClickMenu(false)}
+            >
+                <div
+                    className="bg-white w-full sm:w-fit rounded-sm gap-2 flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ left: rightClickMenuX, top: rightClickMenuY }}
+                >
+                    <button
+                        className="bg-slate-100/10 w-full hover:bg-slate-200/60 text-black text-start px-3 font-light text-sm"
+                        onClick={() => {
+                            window.location = `/notes/edit/${noteId}`;
+                        }}
+                    >
+                        Edit
+                    </button>
+                    {/* <button
+                        className="bg-slate-100/10 w-full hover:bg-slate-200/60 text-black text-start px-3 font-light text-sm"
+                        onClick={() => {
+                            window.location = `/notes/${noteId}/edit`;
+                        }}
+                    >
+                        Star
+                    </button>
+                    <button
+                        className="bg-slate-100/10 w-full flex gap-2 hover:bg-slate-200/60 text-start px-3 text-black font-light text-sm"
+                        onClick={() => {
+                            window.location = `/notes/${noteId}/delete`;
+                        }}
+                    >
+                        Delete
+                    </button> */}
+                </div>
+            </div>
+        )}
 
-        <div className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen h-full py-6 sm:py-0"> 
+
+        <div onClick = {(e) => setShowRightClickMenu(false)} className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen h-full py-6 sm:py-0"> 
             {showNotification && (
                 <div className="fixed top-0 left-0 right-0 bg-green-500 text-white p-2 text-center">
                     {notificationMessage}
@@ -373,7 +419,7 @@ New</button>
                     {/* <h2 className = "text-xl font-semibold text-white">Your Notes</h2> */}
                     <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                     {notes.map(note => (
-                        <Note key={note.id} note={note} showDeleteNotification={showDeleteNotification} fetchNotes={fetchNotes} />
+                        <Note key={note.id} note={note} showDeleteNotification={showDeleteNotification} fetchNotes={fetchNotes} setNoteId = {setNoteId} setShowRightClickMenu = {setShowRightClickMenu} setRightClickMenuX = {setRightClickMenuX} setRightClickMenuY = {setRightClickMenuY} />
                     ))}
 </div>
 
