@@ -11,6 +11,7 @@ const Dashboard = () => {
     const [userData, setUserData] = useState(null);
     const [notes, setNotes] = useState([]);
     const [starredNotes, setStarredNotes] = useState([]);
+    const [viewingUpgradeNotification, setViewingUpgradeNotification] = useState(false); // Whether the user is viewing the upgrade notification
 
     const [currentTab, setCurrentTab] = useState('starredNotes'); // Can be 'starredNotes' or 'recentNotes'
 
@@ -136,6 +137,23 @@ const Dashboard = () => {
         showDeleteNotification('Folder deleted successfully');
     };
 
+    const handleNewNote = async () => {
+        //check if user is free
+        if (userData.accountType === 'Free'){
+            //check notes length
+            if (userData.notes.length >= 50){
+                setViewingUpgradeNotification(true);
+            } else {
+                window.location = "/notes/new";
+            }
+        }
+        else{
+            // window.location = "/notes/new";
+            console.log("Creating new note")
+        }
+    }
+
+
     useEffect(() => {
         const fetchStarredNotes = async () => {
             try {
@@ -161,6 +179,68 @@ const Dashboard = () => {
     return (
         <>
         <Header/>
+        {viewingUpgradeNotification && (
+            <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center">
+                <div className="bg-white rounded-md p-4 gap-2 flex flex-col">
+                    <div className="flex justify-between items-center gap-2">
+                        <h1 className="text-xl font-bold">Upgrade to Premium</h1>
+                        <button
+                            className="w-8 h-8 hover:bg-slate-100 rounded-md items-center flex justify-center"
+                            onClick={() => setViewingUpgradeNotification(false)}
+                        >
+                            {/* Close Icon */}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="w-6 h-6 p-1"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <p className="text-sm">
+                        You have reached the maximum number of notes for a free user. Upgrade to Premium to create unlimited notes.
+                    </p>
+                    <div className="flex justify-between gap-2">
+                        <button
+                            className="bg-purple-900 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded
+                            flex items-center gap-1"
+                            onClick={() => {
+                                window.location = '/upgrade';
+                            }}
+                        >
+                            Upgrade
+                            {/* Upgrade Icon */}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="w-6 h-6"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M19.5 21a3 3 0 003-3V9a3 3 0 00-3-3h-5.379a.75.75 0 01-.53-.22L11.47 3.66A2.25 2.25 0 009.879 3H4.5a3 3 0 00-3 3v12a3 3 0 003 3h15zM9 12.75a.75.75 0 000 1.5h6a.75.75 0 000-1.5H9z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </button>
+                        <button
+                            className="bg-slate-100/10 hover:bg-slate-100/20 text-white font-bold py-2 px-4 rounded"
+                            onClick={() => setViewingUpgradeNotification(false)}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+
         <div className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen h-full py-6 sm:py-0"> 
             {showNotification && (
                 <div className="fixed top-0 left-0 right-0 bg-green-500 text-white p-2 text-center">
@@ -170,7 +250,7 @@ const Dashboard = () => {
             {/* Render user data here */}
             <div className = "pt-16 flex items-center justify-between mx-4">
             <h1 className = "text-2xl font-bold text-gradient bg-gradient-to-r from-purple-300 to-blue-300 text-transparent bg-clip-text">Welcome, {userData.firstName}!</h1>
-            <button className = "flex items-center bg-slate-100/10 hover:bg-slate-100/20 text-white font-light py-2 px-3 rounded" onClick={() => window.location = "/notes/new"}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+            <button className = "flex items-center bg-slate-100/10 hover:bg-slate-100/20 text-white font-light py-2 px-3 rounded" onClick={() => handleNewNote()}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
   <path fillRule="evenodd" d="M12 5.25a.75.75 0 01.75.75v5.25H18a.75.75 0 010 1.5h-5.25V18a.75.75 0 01-1.5 0v-5.25H6a.75.75 0 010-1.5h5.25V6a.75.75 0 01.75-.75z" clipRule="evenodd" />
 </svg>
 New</button>
@@ -295,7 +375,8 @@ New</button>
             ) : (
                 <div>
                     <h2>You have no notes yet!</h2>
-                    <button className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => window.location = "/notes/new"}>Create a note</button>    
+                    {/* <button className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => window.location = "/notes/new"}>Create a note</button>     */}
+                    <button className = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => window.location = "/notes/new"}>Create a note</button> 
                 </div>
             )}
         <div className = "w-auto bg-slate-100/30 p-2 h-fit mx-6 rounded-md">

@@ -97,7 +97,7 @@ app.post('/login', async (req, res) => {
             }
         };
 
-        // console.log(payload)
+        console.log(payload)
 
         if (!process.env.JWT_SECRET) {
             console.error("JWT_SECRET is not defined.");
@@ -481,7 +481,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
     }
     try {
 
-        // console.log(req.file)
+        console.log(req.file)
 
         
       // The file has been stored by Multer at this point, and you can access it via req.file
@@ -511,7 +511,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
   });
 
   
-  app.get('/api/images/:filename', (req, res) => {
+  app.get('/api/image/:filename', (req, res) => {
     gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
         // Check if file
         if (!file || file.length === 0) {
