@@ -285,7 +285,8 @@ const Dashboard = () => {
 
         <div onClick = {(e) => setShowRightClickMenu(false)} className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen h-full py-6 sm:py-0"> 
             {showNotification && (
-                <div className="fixed top-0 left-0 right-0 bg-green-500 text-white p-2 text-center">
+                //have the div animate in from the top
+                <div className="fixed top-0 left-0 right-0 mx-auto mt-2 rounded-md w-fit bg-white ring-2 ring-slate-300 text-purple-900 p-2 text-center animate-fade-in-down animate-fade-out-up transition-all duration-500">
                     {notificationMessage}
                 </div>
             )}
