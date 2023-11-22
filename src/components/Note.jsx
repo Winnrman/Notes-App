@@ -66,7 +66,7 @@ const note = (props) => {
             <div onContextMenu={(e) => handleRightClick (e, props.note._id)} className = "bg-white shadow-lg rounded-lg p-2 m-2">
                 <span>
             <h3 className = "font-semibold text-xl">{props.note.title}</h3>
-            <div className = "post_content">
+            <div className = "post_content max-h-40 overflow-y-auto">
                 <NoteDisplay content={props.note.content} />
             </div>
             </span>

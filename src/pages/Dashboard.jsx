@@ -142,7 +142,7 @@ const Dashboard = () => {
         setChoosingFolder(true);
     }
 
-    const handleAddToFolder = async (noteId, folderId) => {
+    const handleAddToFolder = async (noteId, folderId) => { //this works perfectly.
         const token = localStorage.getItem('token');
         const config = {
             headers: {
