@@ -156,7 +156,7 @@ app.get('/api/user/data', async (req, res) => {
 app.post('/api/notes', async (req, res) => {
     try {
         // Extract note details from request body
-        const { title, content } = req.body;
+        const { title, content, folderId } = req.body;
 
         //use the token to connect the user to the note
         const token = req.header('Authorization').replace('Bearer ', '');
@@ -175,11 +175,24 @@ app.post('/api/notes', async (req, res) => {
         const note = new Note({
             title,
             content,
-            userId
+            userId, 
+            folderId
         });
 
         // Save the note
         db.collection('notes').insertOne(note);
+
+        //if the note has a folder, add the note to the folder's notes array
+        if (folderId !== 'undefined' || folderId !== undefined || folderId !== null || folderId !== 'null') {
+            console.log("note has a folder with iD: "+folderId)
+            await db.collection("folders").updateOne(
+                { _id: new ObjectId(folderId) },
+                { $addToSet: { notes: note._id } }
+            );
+        }
+        else if(folderId == null){
+            console.log("note has no folder")
+        }
 
         //add the note to the user's notes array
         user.notes.push(note._id);
@@ -290,10 +303,10 @@ app.delete('/api/notes/:id', async (req, res) => {
             const srcOccurrences = note.content.split("src=");
             for (let i = 1; i < srcOccurrences.length; i++) {
                 const imageUrl = srcOccurrences[i].split(" ")[0].replace(/"/g, "");
-                console.log(imageUrl)
+                // console.log(imageUrl)
                 if (imageUrl.includes("/api/image/")) {
                     const imageId = imageUrl.split("/api/image/")[1].split("</p>")[0].split(">")[0];
-                    console.log(imageId)
+                    // console.log(imageId)
                     imageUrls.push(imageId);
                 }
             }
@@ -306,9 +319,23 @@ app.delete('/api/notes/:id', async (req, res) => {
             await db.collection("uploads.chunks").deleteOne({ files_id: imageUrl });
         }
 
+        //if note has a folder, delete the note from the folder's notes array
+        if (note.folderId !== 'undefined' || note.folderId !== undefined || note.folderId !== null || note.folderId !== 'null') {
+            console.log("note has a folder with iD: "+note.folderId)
+            await db.collection("folders").updateOne(
+                { _id: new ObjectId(note.folderId) },
+                { $pull: { notes: new ObjectId(id) } }
+            );
+        }
+        else{
+            console.log("note has no folder")
+        }
+
+
         await Note.findByIdAndDelete(id); //this deletes the note from the notes collection
         // console.log("note deleted from notes collection");
         res.status(200).json({ msg: 'Note deleted successfully' });
+
     }
     catch (err) {
         console.error(err.message);
@@ -317,8 +344,11 @@ app.delete('/api/notes/:id', async (req, res) => {
 });
 
 app.post('/api/folders', async (req, res) => {
+
+    console.log('creating new folder')
+
     try {
-        const token = req.headers('Authorization').replace('Bearer ', '');
+        const token = req.header('Authorization').replace('Bearer ', '');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Find the user
@@ -396,6 +426,36 @@ app.delete('/api/folders/:id', async (req, res) => {
         );
 
         res.status(200).json({ msg: 'Folder deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.post('/api/notes/:id/addToFolder', async (req, res) => {
+    try {
+        const noteId = req.params.id;
+        const folderId = req.body.folderId;
+
+        // Check if the folder exists
+        const folder = await db.collection('folders').findOne({ _id: new ObjectId(folderId) });
+        if (!folder) {
+            return res.status(404).json({ msg: 'Folder not found' });
+        }
+
+        // Add the folder ID to the note
+        await db.collection('notes').updateOne(
+            { _id: new ObjectId(noteId) },
+            { $set: { folderId: new ObjectId(folderId) }}
+        );
+
+        //also add the note to the folder's notes array
+        await db.collection('folders').updateOne(
+            { _id: new ObjectId(folderId) },
+            { $addToSet: { notes: new ObjectId(noteId) }}
+        );
+
+        res.status(200).json({ msg: 'Note added to folder successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).send('Server error');

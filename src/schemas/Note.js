@@ -25,6 +25,10 @@ const noteSchema = new Schema({
         type: Boolean,
         default: false
     },
+    folderId: {
+        type: String,
+        default: null
+    }
 });
 
 // Create a model

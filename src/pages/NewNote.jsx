@@ -2,8 +2,30 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import RichTextEditor from '../components/RichTextEditor';
 import Header from '../components/Header';
+import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
+
 
 function NewNote() {
+
+    const navigate = useNavigate();
+
+    //there is a ?folderId= in the url which is to be used to create a note in that folder
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    let folderId = queryParams.get('folderId'); // Get folderId from URL
+
+    //the folderId can be not in the url, so we need to check for undefined
+        
+
+    //check for undefined folderId
+    // console.log(folderId);
+    if(folderId === 'undefined') {
+        console.log("undefined");
+        folderId = "NONE" //if undefined, set folderId to NONE
+    }
+
     const [noteData, setNoteData] = useState({
         title: '',
         content: ''
@@ -30,11 +52,20 @@ function NewNote() {
                     'Authorization': `Bearer ${token}`
                 }
             };
-            const body = JSON.stringify(noteData);
+
+            if(folderId === "NONE") {
+                folderId = null;
+            }
+
+            const body = JSON.stringify({ 
+                title, 
+                content, 
+                folderId
+            });
             const response = await axios.post('/api/notes', body, config);
             // Handle successful creation (e.g., redirecting to dashboard or a specific note page)
             // console.log(response.data);
-            window.location = "/dashboard";
+            navigate('/dashboard');
         } catch (error) {
             console.error(error);
             // Handle errors, e.g., displaying error messages
@@ -42,7 +73,7 @@ function NewNote() {
     }
 
     const handleCancel = () => {
-        window.location = "/dashboard";
+        navigate('/dashboard');
     }
 
     return (

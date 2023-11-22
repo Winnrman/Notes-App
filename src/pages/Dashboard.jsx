@@ -2,19 +2,29 @@ import '../index.css'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
-import {fetchNotes} from './notesService';
+// import {fetchNotes} from './notesService';
 import {fetchUserData} from '../components/userService';
 import Note from '../components/Note';
 import { get, set } from 'mongoose';
+import {handleNewNote } from './notesService';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
     const [notes, setNotes] = useState([]);
     const [starredNotes, setStarredNotes] = useState([]);
-    const [showRightClickMenu, setShowRightClickMenu] = useState(false);
 
+    const [showRightClickMenu, setShowRightClickMenu] = useState(false);
     const [rightClickMenuX, setRightClickMenuX] = useState(0);
     const [rightClickMenuY, setRightClickMenuY] = useState(0);
+    const [noteId, setNoteId] = useState(''); // The ID of the note that was right-clicked on
+
+    const [folderData, setFolderData] = useState([]);
+
+
+
+    const [choosingFolder, setChoosingFolder] = useState(false); // Whether the user is choosing a folder to add the note to
+
+
     const [viewingUpgradeNotification, setViewingUpgradeNotification] = useState(false); // Whether the user is viewing the upgrade notification
 
     const [currentTab, setCurrentTab] = useState('starredNotes'); // Can be 'starredNotes' or 'recentNotes'
@@ -25,7 +35,6 @@ const Dashboard = () => {
 
     const [creatingFolder, setCreatingFolder] = useState(false);
 
-    const [noteId, setNoteId] = useState(''); // The ID of the note that was right-clicked on
 
     const showDeleteNotification = (message) => {
         setNotificationMessage(message);
@@ -87,43 +96,24 @@ const Dashboard = () => {
     //     console.log(response.data);
     // }
 
-    useEffect(() => {
-        const loadData = async () => {
-            const data = await fetchUserData();
-            //check for expired token
-            if (data.message) {
-                window.location = '/login';
-            }
-            setUserData(data);
-            // console.log(data);
-        };
+    const fetchFoldersData = async () => {
+        if (userData) {
+            console.log(userData);
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+            const foldersData = await Promise.all(userData.folders.map(async (folder) => {
+                const response = await axios.get(`/api/folders/${folder}`, config);
+                return response.data;
+            }));
+            setFolderData(foldersData);
+        }
+    };
 
-        loadData();
-        fetchNotes();
-    }, []);
-
-    const [folderData, setFolderData] = useState([]);
-
-    // fetch the folder data for each folder
-    useEffect(() => {
-        const fetchFoldersData = async () => {
-            if (userData) {
-                const token = localStorage.getItem('token');
-                const config = {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                };
-                const foldersData = await Promise.all(userData.folders.map(async (folder) => {
-                    const response = await axios.get(`/api/folders/${folder}`, config);
-                    return response.data;
-                }));
-                setFolderData(foldersData);
-            }
-        };
     
-        fetchFoldersData();
-    }, [userData]);
 
     const handleDeleteFolder = async (folderId) => {
         const token = localStorage.getItem('token');
@@ -143,26 +133,57 @@ const Dashboard = () => {
         showDeleteNotification('Folder deleted successfully');
     };
 
-    const handleNewNote = async () => {
-        //check if user is free
-        if (userData.accountType === 'Free'){
-            //check notes length
-            if (userData.notes.length >= 50){
-                setViewingUpgradeNotification(true);
-            } else {
-                window.location = "/notes/new";
-            }
-        }
-        else{
-            window.location = "/notes/new";
-            
-        }
-    }
-
     const handleSearch = async () => {
         alert("Search function is currently under development")
     }
 
+    const addToFolder = () => {
+        setShowRightClickMenu(false);
+        setChoosingFolder(true);
+    }
+
+    const handleAddToFolder = async (noteId, folderId) => {
+        const token = localStorage.getItem('token');
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        };
+
+        const body = {folderId: folderId};
+
+        const response = await axios.post(`/api/notes/${noteId}/addToFolder`, body, config);
+        // console.log(response.data);
+
+        const newUserData = { ...userData };
+        newUserData.notes = newUserData.notes.filter(note => note !== noteId);
+
+        setUserData(newUserData);
+        showDeleteNotification('Note added to folder successfully');
+    };
+
+
+    useEffect(() => {
+        const loadData = async () => {
+            const data = await fetchUserData();
+            //check for expired token
+            if (data.message) {
+                window.location = '/login';
+            }
+            setUserData(data);
+            // console.log(data);
+        };
+
+        loadData();
+        fetchNotes();
+    }, []); // Fetch user data when the component mounts
+
+
+    // fetch the folder data for each folder
+    useEffect(() => {
+        fetchFoldersData();
+        fetchNotes();
+    }, [userData]);
 
     useEffect(() => {
         const fetchStarredNotes = async () => {
@@ -179,11 +200,12 @@ const Dashboard = () => {
         fetchStarredNotes();
     }, [userData]); // Fetch starred notes when userData changes
 
-    
-
-
     if (!userData) {
         return <div>Loading...</div>; // or any other loading state representation
+    }
+
+    const handleFolderClick = (id) => {
+        window.location = '/folders/' + id;
     }
 
     return (
@@ -278,9 +300,72 @@ const Dashboard = () => {
                     >
                         Delete
                     </button> */}
+
+                <button
+                    className="bg-slate-100/10 w-full hover:bg-slate-200/60 text-black text-start px-3 font-light text-sm"
+                    onClick={() => {
+                        // Trigger the add to folder functionality
+                        // For now, we will use a static folderId for illustration
+                        const folderId = 'your-folder-id'; // This would be dynamically set based on user's choice
+                        addToFolder(); // Show the folder selection menu
+                    }}
+                >
+                    Add to Folder
+                </button>
+
                 </div>
             </div>
         )}
+
+        {choosingFolder && (
+            <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center">
+                <div className="bg-white w-3/4 sm:w-fit rounded-md p-4 gap-2 flex flex-col">
+                    <div className="flex justify-between items-center gap-2">
+                        <h1 className="text-xl font-bold">Choose a folder</h1>
+                        <button
+                            className="w-8 h-8 hover:bg-slate-100 rounded-md items-center flex justify-center"
+                            onClick={() => setChoosingFolder(false)}
+                        >
+                            {/* Close Icon */}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="w-6 h-6 p-1"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <div className="flex justify-between gap-2 flex-col">
+                        {userData.folders.map((folderId) => {
+                            const folder = folderData.find((folder) => folder._id === folderId);
+                            // console.log(folder);
+                            return (
+                                <button
+                                    key={folderId}
+                                    className="bg-slate-100/10 hover:bg-slate-200/60 text-black text-start py-2 font-light text-sm"
+                                    onClick={() => {
+                                        handleAddToFolder(noteId, folderId);
+                                    }}
+                                >
+                                    <div className = "flex w-full justify-between items-center">
+                                    <p className = "">{folder.title}</p>
+                                    <p className = "text-slate-500">{folder.notesCount == 1 ? folder.notesCount + " Note" : folder.notesCount + " Notes"}</p>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        )}
+
+                                    
 
 
         <div onClick = {(e) => setShowRightClickMenu(false)} className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen h-full py-6 sm:py-0"> 
@@ -297,7 +382,7 @@ const Dashboard = () => {
             {/* search bar goes here*/}
             
             
-            <button className = "flex items-center bg-slate-100/10 hover:bg-slate-100/20 text-white font-light py-2 px-3 rounded" onClick={() => handleNewNote()}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+            <button className = "flex items-center bg-slate-100/10 hover:bg-slate-100/20 text-white font-light py-2 px-3 rounded" onClick={() => handleNewNote(userData, setViewingUpgradeNotification)}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
   <path fillRule="evenodd" d="M12 5.25a.75.75 0 01.75.75v5.25H18a.75.75 0 010 1.5h-5.25V18a.75.75 0 01-1.5 0v-5.25H6a.75.75 0 010-1.5h5.25V6a.75.75 0 01.75-.75z" clipRule="evenodd" />
 </svg>
 New</button>
@@ -339,7 +424,7 @@ New</button>
                 <div className = "w-auto bg-transparent p-2 m-4 rounded-md">
                     <div className="bg-transparent py-2 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                     {folderData.map(folder => (
-                        <div key={folder._id} className="group bg-slate-100/10 ring-2 ring-slate-100/20 rounded-md p-2 hover:bg-slate-100/20 hover:ring-slate-100/50 relative">
+                        <div onClick = {(e) => handleFolderClick(folder._id)}  key={folder._id} className="group bg-slate-100/10 ring-2 ring-slate-100/20 rounded-md p-2 hover:bg-slate-100/20 hover:ring-slate-100/50 relative hover:cursor-pointer">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 fill-slate-100/70">
@@ -360,9 +445,13 @@ New</button>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 p-1">
                                 <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
                                 </svg>
-
                             </button>
-                                <p className="text-white/60 text-sm">{folder.notesCount} notes</p>
+                            {folder.notes ? (
+
+                                <p className="text-white/60 text-sm">{folder.notes.length == 1 ? folder.notes.length + " Note" : folder.notes.length + " Notes"}</p>
+                            ) : (
+                                <p className="text-white/60 text-sm">0 Notes</p>
+                            )}
                                 </div>
                             </div>
                             
@@ -416,14 +505,24 @@ New</button>
 
 
             {userData.notes.length > 0 ? (
-                <div className = "w-full bg-transparent p-2 rounded-md">
-                    {/* <h2 className = "text-xl font-semibold text-white">Your Notes</h2> */}
+                <div className="w-full bg-transparent p-2 rounded-md">
                     <div className="bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                    {notes.map(note => (
-                        <Note key={note.id} note={note} showDeleteNotification={showDeleteNotification} fetchNotes={fetchNotes} setNoteId = {setNoteId} setShowRightClickMenu = {setShowRightClickMenu} setRightClickMenuX = {setRightClickMenuX} setRightClickMenuY = {setRightClickMenuY} />
-                    ))}
-</div>
-
+                        {notes
+                            .filter(note => !note.folderId) // Filter out notes that have a folderId
+                            .map(note => (
+                                <Note 
+                                    key={note.id} 
+                                    note={note} 
+                                    showDeleteNotification={showDeleteNotification} 
+                                    fetchNotes={fetchNotes} 
+                                    setNoteId={setNoteId} 
+                                    setShowRightClickMenu={setShowRightClickMenu} 
+                                    setRightClickMenuX={setRightClickMenuX} 
+                                    setRightClickMenuY={setRightClickMenuY} 
+                                />
+                            ))
+                        }
+                    </div>
                 </div>
             ) : (
                 <div>

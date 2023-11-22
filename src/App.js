@@ -10,6 +10,7 @@ import EditNote from './pages/EditNote';
 import LoginProtectedRoute from './components/LoginProtectedRoute';
 import DemoPage from './pages/demoPage';
 import Forum from './pages/Forum';
+import FolderPage from './pages/FolderPage';
 
 function App() {
     return (
@@ -45,6 +46,13 @@ function App() {
                         <Forum/>
                     </ProtectedRoute>
                 } />
+
+                <Route path="/folders/:id" element={
+                    <ProtectedRoute>
+                    <FolderPage/>
+                    </ProtectedRoute>
+                } />
+
                     
                 <Route path="/" element={<Welcome />} />
                 {/* Define other protected routes similarly */}
