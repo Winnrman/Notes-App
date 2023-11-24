@@ -28,9 +28,6 @@ const FolderPage = () => {
   const folderId = window.location.pathname.split('/')[2]; // Assuming the ID is in the URL
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
-
-  const [showAddToFolder, setShowAddToFolder] = useState(false);
-
   const [showRightClickMenu, setShowRightClickMenu] = useState(false);
   const [rightClickMenuX, setRightClickMenuX] = useState(0);
   const [rightClickMenuY, setRightClickMenuY] = useState(0);
@@ -142,7 +139,12 @@ const fetchNotes = async () => {
       </div>
   )}
       <Header/>
-          
+      {showNotification && (
+                //have the div animate in from the top
+                <div className="fixed top-0 left-0 right-0 mx-auto mt-2 rounded-md w-fit bg-white ring-2 ring-slate-300 text-purple-900 p-2 text-center animate-fade-in-down animate-fade-out-up transition-all duration-500">
+                    {notificationMessage}
+                </div>
+            )}
       <div className = "bg-gradient-to-bl from-purple-900 to-blue-900 min-h-screen py-2 px-6">
         <div className = "pt-16 flex flex-row items-center justify-between">
           <div className = "flex items-center gap-1">

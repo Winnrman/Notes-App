@@ -65,7 +65,9 @@ function NewNote() {
             const response = await axios.post('/api/notes', body, config);
             // Handle successful creation (e.g., redirecting to dashboard or a specific note page)
             // console.log(response.data);
-            navigate('/dashboard');
+            
+            //go back to previous page
+            navigate(-1); //go back to previous page
         } catch (error) {
             console.error(error);
             // Handle errors, e.g., displaying error messages

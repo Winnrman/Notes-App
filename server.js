@@ -10,6 +10,7 @@ require('dotenv').config();
 const Note = require('./src/schemas/Note'); // Adjust path as needed
 const ObjectId = require('mongodb').ObjectId;
 const Folder = require('./src/schemas/Folder'); // Adjust path as needed
+const File = require('./src/schemas/File'); // Adjust path as needed
 
 
 
@@ -483,12 +484,43 @@ app.get('/api/notes/:id/star', async (req, res) => {
         );
 
         //also change the note's isStarred property to true
-        // await db.collection('notes').updateOne(
-        //     { _id: new ObjectId(id) },
-        //     { $set: { isStarred: true } }
-        // );
+        await db.collection('notes').updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { isStarred: true } }
+        );
 
         res.status(200).json({ msg: 'Note starred successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/api/notes/:id/unstar', async (req, res) => {
+    try {
+
+        const { id } = req.params;
+        const note = await db.collection("notes").findOne({ _id: new ObjectId(id) });
+        if (!note) {
+            return res.status(404).send('Note not found');
+        }
+
+        const token = req.header('Authorization').replace('Bearer ', '');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.user.id;
+
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(userId) },
+            { $pull: { starredNotes: note._id } }
+        );
+
+        //also change the note's isStarred property to false
+        await db.collection('notes').updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { isStarred: false } }
+        );
+
+        res.status(200).json({ msg: 'Note unstarred successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).send('Server error');
@@ -559,6 +591,9 @@ const storage = new GridFsStorage({
 });
 
 const upload = multer({ storage });
+const temporaryUpload = multer({ dest: './uploads/' });
+const sharp = require('sharp');
+const fs = require('fs');
 
 app.post('/api/upload', upload.single('image'), async (req, res) => {
     if (!req.file) {
@@ -621,6 +656,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
         }
     });
 });
+
   
 
 
