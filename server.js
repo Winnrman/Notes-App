@@ -643,7 +643,7 @@ app.post('/api/upload', temporaryUpload.single('image'), async (req, res) => {
 
 
   
-  app.get('/api/image/:filename', (req, res) => {
+app.get('/api/image/:filename', (req, res) => {
     gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
         // Check if file
         if (!file || file.length === 0) {
@@ -670,8 +670,6 @@ app.post('/api/upload', temporaryUpload.single('image'), async (req, res) => {
 });
 
   
-
-
 // Choose a port
 const port = process.env.PORT || 4000;
 

@@ -11,6 +11,7 @@ import LoginProtectedRoute from './components/LoginProtectedRoute';
 import DemoPage from './pages/demoPage';
 import Forum from './pages/Forum';
 import FolderPage from './pages/FolderPage';
+import UpgradePage from './pages/UpgradePage';
 
 function App() {
     return (
@@ -44,6 +45,12 @@ function App() {
                 <Route path = "/forum" element={
                     <ProtectedRoute>
                         <Forum/>
+                    </ProtectedRoute>
+                } />
+
+                <Route path = "/upgrade" element={
+                    <ProtectedRoute>
+                        <UpgradePage/>
                     </ProtectedRoute>
                 } />
 
