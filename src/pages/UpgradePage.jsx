@@ -81,7 +81,7 @@ const plans = [
     return (
         <>
         <Header/>
-        <div className = "flex min-h-screen flex-col justify-center items-center bg-gradient-to-bl from-purple-900 to-blue-900">
+        <div className = "pt-32 flex min-h-screen flex-col justify-center items-center bg-gradient-to-bl from-purple-900 to-blue-900">
             <h1 className = "text-4xl font-bold mb-4 text-gradient bg-gradient-to-r from-purple-300 to-blue-300 text-transparent bg-clip-text p-2">Upgrade Your Plan</h1>
             <div className = "flex flex-col sm:flex-row justify-center h-full">
                 {plans.map((plan, index) => (
