@@ -524,7 +524,7 @@ const crypto = require('crypto');
 const Grid = require('gridfs-stream');
 
 // Create mongo connection
-const conn = mongoose.createConnection(process.env.MONGODB_URI);
+const conn = mongoose.createConnection('mongodb+srv://andre:andre123@cluster0.tss60.mongodb.net/Notes-App?retryWrites=true&w=majority');
 
 // Init gfs
 let gfs, gridfsBucket;
@@ -621,6 +621,31 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
         }
     });
 });
+
+const stripe = require('stripe')('sk_test_51OMKdMDy5bQDtXfZFdhqOzI1rDYDbJBzMSiGyx1k0h569OK7JuLa4LLCdc6mL3CzMcRlUzFZJMCMAcyLG2pKTRpy00unsFLDIg')
+
+//set up stripe API endpoint for recieving payments
+app.post('/api/checkout', async (req, res) => {
+    try{
+        const { amount, currency, paymentMethodId } = req.body;
+
+        // Create a PaymentIntent with the order amount and currency
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount, // Amount in smallest currency unit, e.g., cents for USD
+            currency,
+            payment_method: paymentMethodId,
+            confirm: true, // Automatically confirm the payment
+            return_url: 'http://localhost:3000/dashboard', // We need to pass the URL where the user will be redirected after payment completion
+        });
+
+        res.status(200).json(paymentIntent);
+    } catch (error) {
+        console.error('Stripe payment error:', error);
+        res.status(500).json({ error: error.message });
+    
+    }
+})
+
   
 
 

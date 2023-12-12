@@ -11,6 +11,7 @@ import LoginProtectedRoute from './components/LoginProtectedRoute';
 import DemoPage from './pages/demoPage';
 import Forum from './pages/Forum';
 import FolderPage from './pages/FolderPage';
+import PaymentPage from './pages/Payment';
 
 function App() {
     return (
@@ -50,6 +51,12 @@ function App() {
                 <Route path="/folders/:id" element={
                     <ProtectedRoute>
                     <FolderPage/>
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/payment" element={
+                    <ProtectedRoute>
+                    <PaymentPage/>
                     </ProtectedRoute>
                 } />
 

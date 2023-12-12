@@ -160,7 +160,7 @@ const fetchNotes = async () => {
       {folder?.notes ? (
         <>
         <p className = "text-white text-xl font-base px-16">{folder ? "Total: "+folder.notes.length +" Note(s)" : 'Loading...'}</p>
-        <div className="notes-container px-12 bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <div className="notes-container sm:px-12 bg-transparent py-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {notes.length ? (
             notes.map(note => (
               <Note 
