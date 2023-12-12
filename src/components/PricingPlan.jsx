@@ -1,7 +1,16 @@
 // PricingPlan.js
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 const PricingPlan = ({ plan }) => {
+
+  const history = useNavigate();
+
+  const handleSelectPlan = () => {
+    history('/checkout');
+  };
+
   return (
     <>
     {plan.selected ? (
@@ -50,21 +59,24 @@ const PricingPlan = ({ plan }) => {
           ))}
         </ul>
         </div>
+          {plan.selected ? (
+            <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 rounded w-full">
+              Active Plan
+            </button>
+          ) : (
+            <button className="bg-slate-900/50 hover:bg-slate-900/80 text-white font-bold py-2 px-4 rounded w-full" onClick={handleSelectPlan}>
+              Select Plan
+            </button>
+          )}
+      
+          
 
-        {plan.selected ? (
-          <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 rounded w-full ">
-            Selected
-          </button>
-        ) : (
-          <button className="bg-slate-900/50 hover:bg-slate-900/80 text-white font-bold py-2 px-4 rounded w-full">
-            Select Plan
-          </button>
-        )}
       </div>
     </div>
     )}
     </>
   );
 };
+
 
 export default PricingPlan;

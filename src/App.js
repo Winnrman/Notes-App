@@ -11,11 +11,8 @@ import LoginProtectedRoute from './components/LoginProtectedRoute';
 import DemoPage from './pages/demoPage';
 import Forum from './pages/Forum';
 import FolderPage from './pages/FolderPage';
-<<<<<<< HEAD
-import PaymentPage from './pages/Payment';
-=======
 import UpgradePage from './pages/UpgradePage';
->>>>>>> 5d813ece21759f5066b907dd5196b0094757d7bc
+import PaymentPage from './pages/Payment';
 
 function App() {
     return (
@@ -64,7 +61,7 @@ function App() {
                     </ProtectedRoute>
                 } />
 
-                <Route path="/payment" element={
+                <Route path="/checkout" element={
                     <ProtectedRoute>
                     <PaymentPage/>
                     </ProtectedRoute>
