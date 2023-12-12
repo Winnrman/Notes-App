@@ -10,6 +10,7 @@ require('dotenv').config();
 const Note = require('./src/schemas/Note'); // Adjust path as needed
 const ObjectId = require('mongodb').ObjectId;
 const Folder = require('./src/schemas/Folder'); // Adjust path as needed
+const File = require('./src/schemas/File'); // Adjust path as needed
 
 
 
@@ -184,7 +185,7 @@ app.post('/api/notes', async (req, res) => {
 
         //if the note has a folder, add the note to the folder's notes array
         if (folderId !== 'undefined' || folderId !== undefined || folderId !== null || folderId !== 'null') {
-            console.log("note has a folder with iD: "+folderId)
+            // console.log("note has a folder with iD: "+folderId)
             await db.collection("folders").updateOne(
                 { _id: new ObjectId(folderId) },
                 { $addToSet: { notes: note._id } }
@@ -321,7 +322,7 @@ app.delete('/api/notes/:id', async (req, res) => {
 
         //if note has a folder, delete the note from the folder's notes array
         if (note.folderId !== 'undefined' || note.folderId !== undefined || note.folderId !== null || note.folderId !== 'null') {
-            console.log("note has a folder with iD: "+note.folderId)
+            // console.log("note has a folder with iD: "+note.folderId)
             await db.collection("folders").updateOne(
                 { _id: new ObjectId(note.folderId) },
                 { $pull: { notes: new ObjectId(id) } }
@@ -483,12 +484,43 @@ app.get('/api/notes/:id/star', async (req, res) => {
         );
 
         //also change the note's isStarred property to true
-        // await db.collection('notes').updateOne(
-        //     { _id: new ObjectId(id) },
-        //     { $set: { isStarred: true } }
-        // );
+        await db.collection('notes').updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { isStarred: true } }
+        );
 
         res.status(200).json({ msg: 'Note starred successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/api/notes/:id/unstar', async (req, res) => {
+    try {
+
+        const { id } = req.params;
+        const note = await db.collection("notes").findOne({ _id: new ObjectId(id) });
+        if (!note) {
+            return res.status(404).send('Note not found');
+        }
+
+        const token = req.header('Authorization').replace('Bearer ', '');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.user.id;
+
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(userId) },
+            { $pull: { starredNotes: note._id } }
+        );
+
+        //also change the note's isStarred property to false
+        await db.collection('notes').updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { isStarred: false } }
+        );
+
+        res.status(200).json({ msg: 'Note unstarred successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).send('Server error');
@@ -559,44 +591,59 @@ const storage = new GridFsStorage({
 });
 
 const upload = multer({ storage });
+const temporaryUpload = multer({ dest: './uploads/' });
+const sharp = require('sharp');
+const fs = require('fs');
 
-app.post('/api/upload', upload.single('image'), async (req, res) => {
+const { GridFSBucket } = require('mongodb');
+
+
+app.post('/api/upload', temporaryUpload.single('image'), async (req, res) => {
     if (!req.file) {
-      return res.status(400).send('No file uploaded.');
+        return res.status(400).send('No file uploaded.');
     }
+
+    console.log("uploaded file MIME type: "+req.file.mimetype)
+
+    const tempPath = req.file.path;
+    const processedFileName = `${req.file.filename}-processed`;
+    const processedImagePath = path.join(__dirname, 'uploads', processedFileName);
+
     try {
+        // Process image with Sharp
+        await sharp(tempPath)
+            .resize(800)
+            .png({ quality: 80 })
+            .toFile(processedImagePath);
 
-        console.log(req.file)
+        // Stream the processed image to GridFS
+        const readStream = fs.createReadStream(processedImagePath);
+        const uploadStream = gridfsBucket.openUploadStream(processedFileName, { contentType: 'image/png' });
+        readStream.pipe(uploadStream);
 
-        
-      // The file has been stored by Multer at this point, and you can access it via req.file
-      // You might want to store file information in your document database model
-      // or perform other operations before sending the response.
-  
-      // For example, let's assume we want to store the file's metadata in a document:
-      const fileMetadata = {
-        filename: req.file.filename,
-        contentType: req.file.contentType,
-        // Add any other metadata you want to store, like user ID, etc.
-      };
-  
-      // You can save the metadata to your MongoDB collection if needed
-      // For example:
-      // const FileModel = mongoose.model('File', new mongoose.Schema({ ... }));
-      // const fileDocument = new FileModel(fileMetadata);
-      // await fileDocument.save();
-  
-      // Respond with the URL or ID of the image
-      // Here we are just sending back the file ID generated by GridFS
-      res.status(201).json({ imageUrl: `/api/image/${req.file.filename}` });
+        uploadStream.on('finish', () => {
+            // Clean up temp files after upload is done
+            fs.unlinkSync(tempPath);
+            fs.unlinkSync(processedImagePath);
+
+            // Respond to client
+            res.status(201).json({ message: 'File uploaded successfully', imageUrl: `http://localhost:4000/api/image/${processedFileName}` });
+        });
+
     } catch (error) {
-      console.error(error);
-      res.status(500).send('Error uploading file.');
+        console.error(error);
+        // Ensure temp files are cleaned up even in case of error
+        fs.unlinkSync(tempPath);
+        if (fs.existsSync(processedImagePath)) {
+            fs.unlinkSync(processedImagePath);
+        }
+        res.status(500).send('Error processing image.');
     }
-  });
+});
+
 
   
-  app.get('/api/image/:filename', (req, res) => {
+app.get('/api/image/:filename', (req, res) => {
     gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
         // Check if file
         if (!file || file.length === 0) {
@@ -648,7 +695,7 @@ app.post('/api/checkout', async (req, res) => {
 
   
 
-
+  
 // Choose a port
 const port = process.env.PORT || 4000;
 

@@ -37,7 +37,7 @@ const note = (props) => {
                 'Authorization': `Bearer ${token}`
             }
         };
-        axios.put(`/api/notes/${id}/star`, config)
+        axios.get(`/api/notes/${id}/star`, config)
             .then(res => {
                 console.log(res.data);
                 showDeleteNotification("Note starred successfully.");
@@ -48,6 +48,27 @@ const note = (props) => {
                 // Handle error appropriately here
             });
     }
+
+    function unstarNote (id) {
+        let token = localStorage.getItem('token');
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        };
+        axios.get(`/api/notes/${id}/unstar`, config)
+            .then(res => {
+                console.log(res.data);
+                showDeleteNotification("Note unstarred successfully.");
+                fetchNotes(); // Refresh notes to reflect changes
+            }
+            )
+            .catch(error => {
+                console.error('Error unstarring the note:', error);
+                // Handle error appropriately here
+            });
+    }
+
 
     function handleRightClick (e, id) {
         console.log("Right click");
@@ -76,7 +97,7 @@ const note = (props) => {
                 <div className = "flex flex-row gap-2 items-center">
                 {/* check if note is starred */}
                 {props.note.isStarred ? (
-                    <button onClick = {(e) => starNote(props.note._id)} className = "bg-transparent hover:bg-slate-200 text-white font-bold p-2 rounded"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-transparent fill-yellow-400">
+                    <button onClick = {(e) => unstarNote(props.note._id)} className = "bg-transparent hover:bg-slate-200 text-white font-bold p-2 rounded"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-transparent fill-yellow-400">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                     </svg>
                     </button>

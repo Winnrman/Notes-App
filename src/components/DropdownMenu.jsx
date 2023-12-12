@@ -45,8 +45,11 @@ const DropdownMenu = ({ userData }) => {
             <>
           <p className="justify-between flex block px-4 py-2 text-sm text-purple-900 font-bold hover:bg-gray-100 hover:rounded-md">{userData.accountType}<span className = "font-light">Change</span></p>
           <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-md">Account Settings</a>
+          <div className = "flex flex-row items-center text-sm text-gray-700 hover:bg-gray-100 hover:rounded-md w-full justify-between pr-4">
+            <a href="/forum" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:rounded-md">User Forums</a>
+            <p className = "text-black text-xs font-semibold">0 New Posts</p>
+          </div>
           <p onClick={logout} className="hover:cursor-pointer justify-between flex block px-4 py-2 text-sm text-purple-900 font-bold hover:bg-gray-100 hover:rounded-md">Sign Out</p>
-
           </>
             ) : (
             <p className="justify-between flex block px-4 py-2 text-sm text-purple-900 font-bold hover:bg-gray-100 hover:rounded-md">Sign In</p>

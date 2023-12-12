@@ -1,7 +1,10 @@
 import React from 'react';
-import ReactQuill from 'react-quill';
+import ReactQuill, {Quill} from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // include styles
 import imageHandler from './ImageHandler';
+import ImageResize from 'quill-image-resize-module-react';
+
+Quill.register('modules/imageResize', ImageResize);
 
 function RichTextEditor({ value, onChange }) {
   const modules = {
@@ -16,7 +19,10 @@ function RichTextEditor({ value, onChange }) {
         // This will overwrite the default image handler of React Quill
         'image': imageHandler
       }
-    }
+    },
+    imageResize: {
+      modules: ['Resize', 'DisplaySize']
+   }
   };
 
   return (
